@@ -1,0 +1,20 @@
+---
+title: Sending Errors to Email in App Engine
+created: !!timestamp '2011-09-15 10:00:00'
+tags:
+    - python
+    - appengine
+---
+<p>
+When my server-side code results in an error or exception, it gets logged in the App Engine dashboard. I was getting anxious wondering if there are new errors in the logs,
+refreshing the dashboard every few hours, so I decided to make sure all errors get immediately emailed to me and researched how best to do that.
+</p>
+
+<p>
+First I checked out the <a href="http://code.google.com/appengine/articles/python/recording_exceptions_with_ereporter.html">App Engine ereporter module</a> , but it was set to aggregate errors and email reports once a day -- not frequent enough for anxious me.
+</p>
+<p>I then found a developer that <a href="http://the.darktable.com/post/5740576964/a-family-of-gae-loggers">wrote loggers</a> to send errors over Channel API, PubNub, and XMPP, with a throttling mechanism built-in to prevent getting spammed when many errors happen at once. 
+</p>
+<p>I took his XMPP logger and converted it to send email instead, and set the throttling threshold to 5 minutes instead of 1 second. Now I feel much less anxious! You can grab the code from this gist:
+</p>
+<script src="https://gist.github.com/1219955.js?file=email_logger.py"></script>

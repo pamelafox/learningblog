@@ -1,0 +1,36 @@
+---
+title: PhoneGap Loading Performance in iOS
+created: !!timestamp '2011-10-21 10:00:00'
+tags:
+    - phonegap
+    - performance
+---
+
+<p>
+As I wrote about earlier, I've been working on the performance of my PhoneGap app, implementing many of the suggestions from 
+<a href="http://floatlearning.com/2011/03/developing-better-phonegap-apps/">this article</a>.
+</p>
+<p>
+One of the suggestions that article makes is to switch frameworks from something heavy like jQuery (which includes a lot of extra code that may not be necessary on mobile browsers) to something lighter like Zepto or XUI.
+</p>
+<p>
+I currently use jQuery in my app -- not because I use jQuery a lot in my own code, but because I use a handful of third-party-written jQuery plugins. I could easily port over my own code to a new framework but I don't know how easy it would be to port over someone else's.
+</p>
+<p>
+So, before I looked into porting from jQuery, I wanted to figure out exactly what effect jQuery had on performance. I'm most concerned with loading performance versus already-running performance as that's where I perceive the greatest latency in my app, so I decided to see how long it took for the browser to load my HTML, CSS, and JS.
+</p>
+<p>
+First I wrote a basic function to record times of events and I used it to record events after the CSS, HTML, jQuery script tag, other script tag, document ready, and execution of my  setup function. This is a stripped down version of what it looked like:
+</p>
+<script src="https://gist.github.com/1302665.js?file=phonegap.html"></script>
+
+<p>
+Then I recorded the times in Chrome, iPhone Simulator, and actual iPhone (on the same WIFI network), and graphed them in <a href="https://docs.google.com/spreadsheet/ccc?key=0Ah0xU81penP1dE91SWNtOEJ5UXhVNWJlaVl0NU1ySmc&hl=en_US">a spreadsheet</a>. 
+Here's a chart of the results:
+</p>
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/static/modules/gviz/1.0/chart.js"> {"dataSourceUrl":"//docs.google.com/spreadsheet/tq?key=0Ah0xU81penP1dE91SWNtOEJ5UXhVNWJlaVl0NU1ySmc&transpose=0&headers=1&range=A1%3AD8&gid=0&pub=1","options":{"reverseCategories":false,"titleX":"MS Elapsed Since Last Event","backgroundColor":"#FFFFFF","width":600,"logScale":false,"hAxis":{"minValue":null,"viewWindowMode":"pretty","viewWindow":{"min":null,"max":null},"maxValue":null},"hasLabelsColumn":true,"vAxes":[{"title":"Event"}],"title":"PhoneGap Loading Performance","height":371,"legend":"top","reverseAxis":false,"isStacked":false},"state":{},"chartType":"BarChart","chartName":"Chart 1"} </script>
+
+<p>
+As you can see from the chart, the iPhone browser is noticeably slower than Chrome and the simulator, and the jQuery script tag (90 KB) takes 35% of the loading time - same as the custom script tag (220KB). But it's only 300ms, which isn't as slow as I expected and for now, it doesn't seem worth it for me to try to port away from jQuery.
+</p>

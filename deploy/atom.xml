@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>
+        BASIC blog full text feed    </title>
+        <link href="atom.xml" rel="self" />
+    
+        <link href="/"/>
+    
+        
+    <updated>2011-11-01T16:17:39Z</updated>
+
+    <id>/atom.xml/</id>
+
+            <entry>
+            <title type="html">Logging JS Errors on iOS with PhoneGap</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/logging-js-on-ios.html"/>
+            <updated>2011-10-26T10:00:00Z</updated>
+            <published>2011-10-26T10:00:00Z</published>
+            <id>/learning/logging-js-on-ios.html</id>
+                        <category   scheme="/blog/tags"
+                        term="phonegap"
+                        label="Phonegap" />
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;I&amp;#8217;ve spent the last few days getting my PhoneGap app working on an 
+iPhone (an app which previously worked on Android). The hardest part 
+has been learning to debug in the iOS browser, so I thought I&amp;#8217;d post 
+on my&amp;nbsp;findings:
+&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;To view the output of &lt;code&gt;console.log&lt;/code&gt;, you must open the XCode console. 
+The iOS browser &amp;#8220;Debug console&amp;#8221; that most iOS debugging articles mention 
+is only displayed in the standalone Safari browser, not in the WebView (where 
+PhoneGap &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt; lives). 
+  &lt;li&gt;There seem to be times when &lt;code&gt;console.log&lt;/code&gt; does not log the output 
+(perhaps during loading?) - in that case, &lt;code&gt;alert()&lt;/code&gt; always seems to 
+work. 
+  &lt;li&gt;If you log a &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; object using &lt;code&gt;console.log&lt;/code&gt;, it will just print 
+&lt;code&gt;&#34;Object&#34;&lt;/code&gt; by default. You must &lt;span class=&#34;caps&#34;&gt;JSON&lt;/span&gt; stringify it to be useful. 
+  &lt;li&gt;You can also use &lt;a href=&#34;http://debug.phonegap.com&#34;&gt;debug.phonegap.com&lt;/a&gt; (hosted weinre) to view the &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt; 
+and &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; console logs as well. 
+  &lt;li&gt;The WebView browser silently fails on &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; errors - it stops running 
+the &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; code and does not report the error.  To see the error, you must 
+wrap the offending code in a try/catch block. 
+&lt;/ul&gt;
+
+&lt;p&gt;Given all of those learnings, here is my &lt;code&gt;log()&lt;/code&gt; wrapper function that I use across my&amp;nbsp;webapp:
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;function log(something) { 
+    if (window.console){ 
+      if (something instanceof Date) { 
+        something = something.toDateString(); 
+      } 
+      if (isIOS() || isAndroid()) { 
+        if (typeof something == &#39;object&#39;) { 
+          something = JSON.stringify(something); 
+        } 
+        console.log(something); 
+      } else { 
+        console.log(something); 
+      } 
+    } 
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And I wrap various code blocks in try/catch, like the callback function for &lt;span class=&#34;caps&#34;&gt;AJAX&lt;/span&gt;&amp;nbsp;requests: 
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;try { 
+  onSuccess(processJSON(responseJSON)); 
+} catch(e) { 
+  log(e); 
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I posted my observations in the &lt;a href=&#34;http://groups.google.com/group/phonegap/browse_thread/thread/62cf653d67e015ba&#34;&gt;PhoneGap group&lt;/a&gt;
+and the developers there made several recommendations: 1) use &lt;a href=&#34;https://chrome.google.com/webstore/detail/geelfhphabnejjhdalkjhgipohgpdnoc&#34;&gt;Ripple&lt;/a&gt;,
+a Chrome extension for mobile emulation 2) monkey-patch &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; functions to always try-catch, as done in this &lt;a href=&#34;https://github.com/pmuellr/log-callback-error&#34;&gt;library&lt;/a&gt;.
+I&amp;#8217;ve taken a break from iOS debugging for a few days, but I&amp;#8217;ll probably revisit debugging soon and try out their&amp;nbsp;ideas.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Code Quality Tools</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/code-quality-tools.html"/>
+            <updated>2011-10-21T10:00:00Z</updated>
+            <published>2011-10-21T10:00:00Z</published>
+            <id>/learning/code-quality-tools.html</id>
+                        <category   scheme="/blog/tags"
+                        term="python"
+                        label="Python" />
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;
+Now that my application code is getting cleaner, I wanted to make it even cleaner by using automated code quality&amp;nbsp;tools.
+&lt;/p&gt;
+&lt;p&gt;
+First, I ran &lt;a href=&#34;http://jshint.com&#34;&gt;jshint&lt;/a&gt; over all my *.js files and fixed a bunch of little issues (like using &amp;#8220;===&amp;#8221; instead of &amp;#8220;==&amp;#8221; in many places). Here&amp;#8217;s how I setup my Makefile to download jshint and run&amp;nbsp;it: 
+&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/1285624.js?file=Makefile&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;
+Then I ran &lt;a href=&#34;http://svn.python.org/projects/python/trunk/Tools/scripts/reindent.py&#34;&gt;reindent.py&lt;/a&gt; script to fix the indenting on all my *.py files. I had been using 2-space indents, as that&amp;#8217;s we used at Google and also what I use in JavaScript, but I was convinced to go with the &lt;span class=&#34;caps&#34;&gt;PEP8&lt;/span&gt; standard, 4&amp;nbsp;spaces.
+&lt;/p&gt;
+
+&lt;p&gt;
+Then I downloaded &lt;a href=&#34;https://github.com/Kronuz/SublimeLinter&#34;&gt;SublimeLinter&lt;/a&gt;, a plugin for Sublime Text that automatically checks your code as you write it, using jshint for &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; and pyflakes for Python. I configured that to ignore a few &lt;span class=&#34;caps&#34;&gt;PEP8&lt;/span&gt; warnings in the settings &lt;span class=&#34;caps&#34;&gt;JSON&lt;/span&gt; (&amp;#8220;pep8_ignore&amp;#8221;: [ &amp;#8220;E501&amp;#8221;, &amp;#8220;E221&amp;#8221;, &amp;#8220;E203&amp;#8221;]).
+I&amp;#8217;m quite liking SublimeLinter - its lint tools actually catch a few things that could result in real bugs and its nice to be able to correct my code as soon as I type&amp;nbsp;it.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">PhoneGap Loading Performance in iOS</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/phonegap-loading-performance.html"/>
+            <updated>2011-10-21T10:00:00Z</updated>
+            <published>2011-10-21T10:00:00Z</published>
+            <id>/learning/phonegap-loading-performance.html</id>
+                        <category   scheme="/blog/tags"
+                        term="phonegap"
+                        label="Phonegap" />
+                        <category   scheme="/blog/tags"
+                        term="performance"
+                        label="Performance" />
+            
+            <content type="html">
+                                &lt;p&gt;
+As I wrote about earlier, I&amp;#8217;ve been working on the performance of my PhoneGap app, implementing many of the suggestions from 
+&lt;a href=&#34;http://floatlearning.com/2011/03/developing-better-phonegap-apps/&#34;&gt;this article&lt;/a&gt;.
+&lt;/p&gt;
+&lt;p&gt;
+One of the suggestions that article makes is to switch frameworks from something heavy like jQuery (which includes a lot of extra code that may not be necessary on mobile browsers) to something lighter like Zepto or&amp;nbsp;&lt;span class=&#34;caps&#34;&gt;XUI&lt;/span&gt;.
+&lt;/p&gt;
+&lt;p&gt;
+I currently use jQuery in my app &amp;#8212; not because I use jQuery a lot in my own code, but because I use a handful of third-party-written jQuery plugins. I could easily port over my own code to a new framework but I don&amp;#8217;t know how easy it would be to port over someone&amp;nbsp;else&amp;#8217;s.
+&lt;/p&gt;
+&lt;p&gt;
+So, before I looked into porting from jQuery, I wanted to figure out exactly what effect jQuery had on performance. I&amp;#8217;m most concerned with loading performance versus already-running performance as that&amp;#8217;s where I perceive the greatest latency in my app, so I decided to see how long it took for the browser to load my &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt;, &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;, and&amp;nbsp;&lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt;.
+&lt;/p&gt;
+&lt;p&gt;
+First I wrote a basic function to record times of events and I used it to record events after the &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;, &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt;, jQuery script tag, other script tag, document ready, and execution of my  setup function. This is a stripped down version of what it looked&amp;nbsp;like:
+&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/1302665.js?file=phonegap.html&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;
+Then I recorded the times in Chrome, iPhone Simulator, and actual iPhone (on the same &lt;span class=&#34;caps&#34;&gt;WIFI&lt;/span&gt; network), and graphed them in &lt;a href=&#34;https://docs.google.com/spreadsheet/ccc?key=0Ah0xU81penP1dE91SWNtOEJ5UXhVNWJlaVl0NU1ySmc&amp;hl=en_US&#34;&gt;a spreadsheet&lt;/a&gt;. 
+Here&amp;#8217;s a chart of the&amp;nbsp;results:
+&lt;/p&gt;
+
+&lt;script type=&#34;text/javascript&#34; src=&#34;//ajax.googleapis.com/ajax/static/modules/gviz/1.0/chart.js&#34;&gt; {&#34;dataSourceUrl&#34;:&#34;//docs.google.com/spreadsheet/tq?key=0Ah0xU81penP1dE91SWNtOEJ5UXhVNWJlaVl0NU1ySmc&amp;transpose=0&amp;headers=1&amp;range=A1%3AD8&amp;gid=0&amp;pub=1&#34;,&#34;options&#34;:{&#34;reverseCategories&#34;:false,&#34;titleX&#34;:&#34;MS Elapsed Since Last Event&#34;,&#34;backgroundColor&#34;:&#34;#FFFFFF&#34;,&#34;width&#34;:600,&#34;logScale&#34;:false,&#34;hAxis&#34;:{&#34;minValue&#34;:null,&#34;viewWindowMode&#34;:&#34;pretty&#34;,&#34;viewWindow&#34;:{&#34;min&#34;:null,&#34;max&#34;:null},&#34;maxValue&#34;:null},&#34;hasLabelsColumn&#34;:true,&#34;vAxes&#34;:[{&#34;title&#34;:&#34;Event&#34;}],&#34;title&#34;:&#34;PhoneGap Loading Performance&#34;,&#34;height&#34;:371,&#34;legend&#34;:&#34;top&#34;,&#34;reverseAxis&#34;:false,&#34;isStacked&#34;:false},&#34;state&#34;:{},&#34;chartType&#34;:&#34;BarChart&#34;,&#34;chartName&#34;:&#34;Chart 1&#34;} &lt;/script&gt;
+
+&lt;p&gt;
+As you can see from the chart, the iPhone browser is noticeably slower than Chrome and the simulator, and the jQuery script tag (90 &lt;span class=&#34;caps&#34;&gt;KB&lt;/span&gt;) takes 35% of the loading time - same as the custom script tag (&lt;span class=&#34;caps&#34;&gt;220KB&lt;/span&gt;). But it&amp;#8217;s only 300ms, which isn&amp;#8217;t as slow as I expected and for now, it doesn&amp;#8217;t seem worth it for me to try to port away from&amp;nbsp;jQuery.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">JS & CSS Compiling, Compression & Cache-Busting</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/js-css-makefile.html"/>
+            <updated>2011-10-15T10:00:00Z</updated>
+            <published>2011-10-15T10:00:00Z</published>
+            <id>/learning/js-css-makefile.html</id>
+                        <category   scheme="/blog/tags"
+                        term="performance"
+                        label="Performance" />
+                        <category   scheme="/blog/tags"
+                        term="css"
+                        label="Css" />
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;
+Everytime I deploy a new version of my &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; and JavaScript to production,
+I run it through a series of steps to ensure code quality and&amp;nbsp;performance:
+&lt;/p&gt;
+
+&lt;ul&gt;
+ &lt;li&gt;&lt;b&gt;Code quality:&lt;/b&gt; I use &lt;a href=&#34;http://www.jshint.com&#34;&gt;JSHint&lt;/a&gt; to check for JavaScript code quality issues.
+ Sometimes it&amp;#8217;s a matter of style, but other times it actually finds issues that can become runtime bugs.
+ &lt;li&gt;&lt;b&gt;Concatenation:&lt;/b&gt; I use &lt;code&gt;cat&lt;/code&gt; to combine my &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; files and &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; files into one file each, so that the browser
+ can issue less &lt;span class=&#34;caps&#34;&gt;HTTP&lt;/span&gt; requests when loading the page.
+ &lt;li&gt;&lt;b&gt;Compression:&lt;/b&gt; I use &lt;a href=&#34;http://code.google.com/closure/compiler/&#34;&gt;Closure Compiler&lt;/a&gt; to minify my &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; and &lt;a href=&#34;http://developer.yahoo.com/yui/compressor/&#34;&gt;&lt;span class=&#34;caps&#34;&gt;YUI&lt;/span&gt; Compressor&lt;/a&gt; to minify my &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;,
+ so that those &lt;span class=&#34;caps&#34;&gt;HTTP&lt;/span&gt; requests are smaller.
+ &lt;li&gt;&lt;b&gt;Cache bust:&lt;/b&gt; I append the current timestamp as a query parameter to the &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; and &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; in my base template &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt;. I serve
+ the files as static files off App Engine which would normally result in browsers caching them forever, but by appending
+ new query parameters for each deploy, I force the browsers to re-download them only when they&amp;#8217;ve changed.
+&lt;/ul&gt;
+
+&lt;p&gt;I do all of this in a Makefile, including downloading the necessary tools. You can see the relevant bits in this&amp;nbsp;gist:
+&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/1285624.js?file=Makefile&#34;&gt;&lt;/script&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Modularizing My JavaScript</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/javascript-modularization.html"/>
+            <updated>2011-10-13T10:00:00Z</updated>
+            <published>2011-10-13T10:00:00Z</published>
+            <id>/learning/javascript-modularization.html</id>
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;
+I generally try not to get too distracted by the code quality in &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt; and focus on user-facing quality instead, but after a while, it hurts my head knowing that my code is messy &amp;#8212; and makes me not want to mess with the code further. So, I spent yesterday spring cleaning my&amp;nbsp;JavaScript.&lt;/p&gt;
+&lt;p&gt;
+One of the big improvements was to take my smattering of global functions and put them in a namespace. There are a lot of ways to namespace in &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt;, but I opted for the module pattern described in &lt;a href=&#34;http://javascriptweblog.wordpress.com/2010/12/07/namespacing-in-javascript/&#34;&gt;this article&lt;/a&gt;&amp;nbsp;(#3).
+&lt;/p&gt;
+&lt;p&gt;
+Here&amp;#8217;s the basic template for each module&amp;#8217;s JavaScript file &amp;#8212; notice how this technique lets me create functions in each module that are only used inside the module, and aren&amp;#8217;t exposed outside of&amp;nbsp;it.
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var ED = ED || {};
+
+ED.util = (function() {
+
+  function doSomethingPrivate() {
+  }
+
+  function doSomething() {
+    doSomethingPrivate();
+  }
+
+  return {
+    doSomething: doSomething
+  }
+})();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;
+I ended up with 6 &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; modules used across the web and mobile (PhoneGap) version of the&amp;nbsp;app.
+&lt;/p&gt;
+&lt;table&gt;
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.util&lt;/code&gt;   &lt;td&gt;Utility functions, app-independent
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.data&lt;/code&gt;   &lt;td&gt;Global data constant definitions
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.models&lt;/code&gt; &lt;td&gt;Classes representing data from the server &lt;span class=&#34;caps&#34;&gt;DB&lt;/span&gt;
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.shared&lt;/code&gt; &lt;td&gt;App functionality shared by web and mobile 
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.web&lt;/code&gt;    &lt;td&gt;Web specific functionality
+ &lt;tr&gt;&lt;td&gt;&lt;code&gt;ED.mobile&lt;/code&gt; &lt;td&gt;Mobile specific functionality
+&lt;/table&gt;
+&lt;p&gt;
+ I could have put the first 4 of these in &amp;#8220;shared&amp;#8221; but I like the conceptual division, and I&amp;#8217;m concatenating them together before serving them to the user, so it doesn&amp;#8217;t hurt to have multiple&amp;nbsp;files.
+&lt;/p&gt;
+
+&lt;p&gt;Now that my code is cleaner and more manageable, I can more confidently iterate on user-facing&amp;nbsp;features!&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Grammatical Personalization in JS</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/grammatical-personalization-js.html"/>
+            <updated>2011-10-11T10:00:00Z</updated>
+            <published>2011-10-11T10:00:00Z</published>
+            <id>/learning/grammatical-personalization-js.html</id>
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;
+In &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt;, I have various places where I describe something about a user. For&amp;nbsp;example:
+&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;span class=&#34;dquo&#34;&gt;&amp;#8220;&lt;/span&gt;Pamela Fox filled out her logs 3 days in a row.
+&lt;li&gt;&lt;span class=&#34;dquo&#34;&gt;&amp;#8220;&lt;/span&gt;In the last week, you haven&amp;#8217;t logged any measurements.&amp;#8221;
+&lt;/ul&gt;
+&lt;p&gt;
+I wanted to be able to construct those sentences in JavaScript with some sort of mini templating language. I didn&amp;#8217;t find any existing libraries for it, so I wrote my own. Now to generate the above strings, I can write stuff&amp;nbsp;like:
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;personalize(&#39;{{ They|name }}&#39; filled out {{ their }} logs 3 days in a row.&#39;, 
+{gender: &#39;male&#39;, person: &#39;third&#39;, name: &#39;Pamela Fox&#39;});
+personalize(&#39;In the last week, {{ they|name }} {{ have|not }} logged any measurements.&#39;,
+{gender: &#39;male&#39;, person: &#39;first&#39;});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;
+You can see the code for the library in &lt;a href=&#34;https://gist.github.com/1279831&#34;&gt;this gist&lt;/a&gt; and check out a &lt;a href=&#34;http://jsbin.com/iyemiz&#34;&gt;live demo&lt;/a&gt; on&amp;nbsp;jsfiddle.
+&lt;/p&gt;
+
+&lt;p&gt;I built the library for my own use and limited set of use cases, but it could be a starting ground for other people with the same goal. If you are planning on also translating your strings into multiple languages, however, you would probably need an entirely different technique &amp;#8212; grammar varies far too much across languages. Luckily, I have no immediate plans for internationalization and I can stick with this&amp;nbsp;library.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">User Stats Visualization with HighCharts</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/user-stats-visualization.html"/>
+            <updated>2011-10-05T10:00:00Z</updated>
+            <published>2011-10-05T10:00:00Z</published>
+            <id>/learning/user-stats-visualization.html</id>
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;For the first few months of &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt;&amp;#8216;s existence, it was only a small set of users &amp;#8212; family and friends &amp;#8212; and half of them were my buddies on the app. But then a food blogger tweeted it, and over the course of a day, there were 10x the number of users &amp;#8212; all strangers. Since I wasn&amp;#8217;t buddies with the new users and wouldn&amp;#8217;t see their updates in my stream, I needed a way of understanding who all these users were and how they were using the&amp;nbsp;app
+&lt;/p&gt;
+&lt;p&gt;I wanted simple visualizations of my user demographics &lt;span class=&#34;amp&#34;&gt;&amp;amp;&lt;/span&gt; usage data, and after a bit of research on what type of chart to use (i.e. &lt;a href=&#34;http://eagereyes.org/techniques/pie-charts&#34;&gt;not pie charts&lt;/a&gt;), I came up with this stacked horizontal bar chart&amp;nbsp;visualization:
+&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/media/images/userstats.png&#34; style=&#34;width:570px&#34;&gt;
+&lt;p&gt;
+All the bars add up to 100%, the bar parts show their value and percentage on hover, and the bar parts are colored according to their value. For example, true is green and red is false, browsers and OSes are colored according to their debuggability (Ghrome is green since that&amp;#8217;s my browser of choice, guess which one is red?), and numeric values are colored in a monotone gradient. The charts are made using &lt;a href=&#34;http://www.highcharts.com/&#34;&gt;HighCharts&lt;/a&gt;, my favorite charting&amp;nbsp;library.
+&lt;/p&gt;
+&lt;p&gt;
+It&amp;#8217;s nice being able to understand more about my users in a glance.&amp;nbsp;:)
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Client-Side Error Logging</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/client-side-error-logging.html"/>
+            <updated>2011-10-04T10:00:00Z</updated>
+            <published>2011-10-04T10:00:00Z</published>
+            <id>/learning/client-side-error-logging.html</id>
+                        <category   scheme="/blog/tags"
+                        term="javascript"
+                        label="Javascript" />
+            
+            <content type="html">
+                                &lt;p&gt;After setting up my Python code to &lt;a href=&#34;/learning/emailing-error-logs.html&#34;&gt;send server-side errors to my inbox&lt;/a&gt;, I wasn&amp;#8217;t satified. I wanted to know about JavaScript errors, too! So I  set up my base template to send JavaScript errors to my server and log those as errors. Now I find out about all errors immediately in my inbox, and I can deploy a fix before it affects users for too long. So far I&amp;#8217;ve found a couple errors this way that otherwise I wouldn&amp;#8217;t have known about (due to different user behaviors +&amp;nbsp;browsers).
+&lt;/p&gt;
+&lt;p&gt;I use this JavaScript for sending errors to a handler on the server, which then logs them as an error using &lt;code&gt;logging.error&lt;/code&gt;:&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/1261016.js?file=gistfile1.js&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;When I tweeted about my solution, I was pointed to a few related projects and&amp;nbsp;techniques:&lt;/p&gt;
+
+&lt;ul&gt;
+ &lt;li&gt;&lt;a href=&#34;http://blog.protonet.info/post/9620971736/exception-notifier-javascript&#34;&gt;An article&lt;/a&gt; with various tips on logging &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; errors.
+ &lt;li&gt;&lt;a href=&#34;http://jserrlog.appspot.com/&#34;&gt;jserrlog.appspot.com&lt;/a&gt;: A solution hosted on App Engine, where you just drop in the &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; and view the logs on their server.
+ &lt;li&gt;&lt;a href=&#34;http://errorception.com/&#34;&gt;Errorception&lt;/a&gt;: A startup devoted to &amp;#8220;painless javascript error tracking&amp;#8221; and will include more cross-browser logging, emails, and web hooks. Sounds promising!
+&lt;/ul&gt;
+
+&lt;p&gt;Since deploying my solution, I&amp;#8217;ve discovered that &lt;code&gt;window.onerror&lt;/code&gt; doesn&amp;#8217;t work in all browsers (even some &amp;#8220;modern&amp;#8221; ones like Android), so if you are looking to catch every error, you should checkout those links to see the workarounds they&amp;nbsp;employ.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Pre-Deploy Git Check</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/git-commit-check.html"/>
+            <updated>2011-09-30T10:00:00Z</updated>
+            <published>2011-09-30T10:00:00Z</published>
+            <id>/learning/git-commit-check.html</id>
+                        <category   scheme="/blog/tags"
+                        term="workflow"
+                        label="Workflow" />
+            
+            <content type="html">
+                                &lt;p&gt;Since I&amp;#8217;m the only one developing &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt;, I&amp;#8217;ve been content to store it in a Dropbox folder and use a local
+git repository for version control. But I got nervous thinking about what would happen if something went horribly wrong while I was unavailable (like on a plane),
+and decided I needed a backup collaborator &amp;#8212; someone who could quickly checkout the code and deploy a&amp;nbsp;fix.
+&lt;/p&gt;
+&lt;p&gt;I probably could have shared the Dropbox folder with them, but I instead opted for a private &lt;a href=&#34;http://github.com&#34;&gt;Github&lt;/a&gt; plan for $7 a month, which lets me share my code repository with my backup collaborator. 
+Plus, I now get to browse my code history and commits via Github&amp;#8217;s slick online&amp;nbsp;interface.
+&lt;/p&gt;
+
+&lt;p&gt;
+I often forgot to git commit and push my changes, so I added &lt;a href=&#34;http://stackoverflow.com/questions/5143795/how-can-i-check-in-a-bash-script-if-my-local-git-repo-has-changes-or-not/5148851#5148851&#34;&gt;this check&lt;/a&gt; to my Makefile which errors if there are uncommited changes. I run the check everytime I deploy my code to App Engine, to make sure the code always reflects what&amp;#8217;s&amp;nbsp;deployed.
+&lt;/p&gt;
+
+&lt;p&gt;So far, the workflow seems to work&amp;#8230;and now I can fly a plane in peace.&amp;nbsp;☺
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Sending Errors to Email in App Engine</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/emailing-error-logs.html"/>
+            <updated>2011-09-15T10:00:00Z</updated>
+            <published>2011-09-15T10:00:00Z</published>
+            <id>/learning/emailing-error-logs.html</id>
+                        <category   scheme="/blog/tags"
+                        term="python"
+                        label="Python" />
+                        <category   scheme="/blog/tags"
+                        term="appengine"
+                        label="Appengine" />
+            
+            <content type="html">
+                                &lt;p&gt;
+When my server-side code results in an error or exception, it gets logged in the App Engine dashboard. I was getting anxious wondering if there are new errors in the logs,
+refreshing the dashboard every few hours, so I decided to make sure all errors get immediately emailed to me and researched how best to do&amp;nbsp;that.
+&lt;/p&gt;
+
+&lt;p&gt;
+First I checked out the &lt;a href=&#34;http://code.google.com/appengine/articles/python/recording_exceptions_with_ereporter.html&#34;&gt;App Engine ereporter module&lt;/a&gt; , but it was set to aggregate errors and email reports once a day &amp;#8212; not frequent enough for anxious&amp;nbsp;me.
+&lt;/p&gt;
+&lt;p&gt;I then found a developer that &lt;a href=&#34;http://the.darktable.com/post/5740576964/a-family-of-gae-loggers&#34;&gt;wrote loggers&lt;/a&gt; to send errors over Channel &lt;span class=&#34;caps&#34;&gt;API&lt;/span&gt;, PubNub, and &lt;span class=&#34;caps&#34;&gt;XMPP&lt;/span&gt;, with a throttling mechanism built-in to prevent getting spammed when many errors happen at&amp;nbsp;once. 
+&lt;/p&gt;
+&lt;p&gt;I took his &lt;span class=&#34;caps&#34;&gt;XMPP&lt;/span&gt; logger and converted it to send email instead, and set the throttling threshold to 5 minutes instead of 1 second. Now I feel much less anxious! You can grab the code from this&amp;nbsp;gist:
+&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/1219955.js?file=email_logger.py&#34;&gt;&lt;/script&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Switching from jQuery Mobile to Twitter Bootstrap</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/switching-jquerymob-bootstrap.html"/>
+            <updated>2011-09-08T10:00:00Z</updated>
+            <published>2011-09-08T10:00:00Z</published>
+            <id>/learning/switching-jquerymob-bootstrap.html</id>
+                        <category   scheme="/blog/tags"
+                        term="phonegap"
+                        label="Phonegap" />
+                        <category   scheme="/blog/tags"
+                        term="css"
+                        label="Css" />
+            
+            <content type="html">
+                                &lt;p&gt;
+I&amp;#8217;ve been using jQuery mobile (jQM) to make a mobile-enhanced version of &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt; for the past few weeks and though I have much respect for the team behind it, I&amp;#8217;ve grown increasingly frustrated with it.&amp;nbsp;Why?
+&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;It typically enhances by adding additional &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt; elements to the original elements - which can help in making them easier to use on a mobile device, but it means that whenever you want to tweak the styles of an enhanced element, you need to dig into the &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt; and apply &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; overrides at various levels. If the &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt; or inner &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; names change in later jQM versions, you may have to update those &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; overrides. 
+&lt;li&gt;If you dynamically update an enhanced &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt; element (like a form input, for example), you often have to tell jQM to force refresh that element, since it needs to redo the added &lt;span class=&#34;caps&#34;&gt;DOM&lt;/span&gt;. That means you need jQM-specific JavaScript calls in your code.
+&lt;/ol&gt;
+
+&lt;p&gt;I was fine with those issues when I used jQM for an earlier project, but for the everyday.io app, they are becoming bigger issues because: 1) I&amp;#8217;m doing more customization, and 2) I&amp;#8217;m doing more dynamic form creation and&amp;nbsp;updating.
+&lt;/p&gt;
+
+&lt;p&gt;And most importantly, I&amp;#8217;m trying to re-use my &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt;/&lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;/&lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt; across both my the desktop web version and mobile app, and I want minimal difference between them - both so users have a consistent user experience across them, and so that I can write the code just&amp;nbsp;once.
+&lt;/p&gt;
+
+&lt;p&gt;So today I scrapped jQM and decided to use just &lt;span class=&#34;caps&#34;&gt;HTML&lt;/span&gt;/&lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;. And since I suck at making pretty &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;, I&amp;#8217;m using &lt;a href=&#34;http://twitter.github.com/bootstrap/&#34;&gt;Twitter&amp;#8217;s bootstrap library&lt;/a&gt;. It&amp;#8217;s pure &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; (no &lt;span class=&#34;caps&#34;&gt;JS&lt;/span&gt;!), it&amp;#8217;s simple to use, and it&amp;#8217;s pretty. It&amp;#8217;s not specifically designed for mobile, but it works well enough on it and is easy to customize when it doesn&amp;#8217;t quite&amp;nbsp;work.
+&lt;/p&gt;
+
+&lt;p&gt;Here&amp;#8217;s what the app looked like using jQuery mobile and the default black&amp;nbsp;theme:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/media/images/mobilemeal_jqm.png&#34; style=&#34;width:320px&#34;&gt;&lt;/p&gt;
+&lt;/p&gt;
+&lt;p&gt;Here&amp;#8217;s what it looks like using Twitter bootstrap and some basic&amp;nbsp;customization:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/media/images/mobilemeal_bootstrap.jpeg&#34;  style=&#34;width:320px&#34;&gt;&lt;/p&gt;
+&lt;/p&gt;
+&lt;p&gt;As you can see, jQuery mobile does create more mobile-optimized form input interfaces (larger areas for clicking, e.g.), but Twitter bootstrap creates clean &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; that I can easily add my own mobile-optimized &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; on top of when necessary. I&amp;#8217;m happy I made the&amp;nbsp;switch.
+&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">Spriting with Compass</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/spriting-with-compass.html"/>
+            <updated>2011-08-28T10:00:00Z</updated>
+            <published>2011-08-28T10:00:00Z</published>
+            <id>/learning/spriting-with-compass.html</id>
+                        <category   scheme="/blog/tags"
+                        term="performance"
+                        label="Performance" />
+                        <category   scheme="/blog/tags"
+                        term="css"
+                        label="Css" />
+            
+            <content type="html">
+                                &lt;p&gt;I use little icons in various places on &lt;a href=&#34;http://everyday.io&#34;&gt;everyday.io&lt;/a&gt;, like to show
+food bonuses in the&amp;nbsp;stream:&lt;/p&gt;
+&lt;p&gt;
+&lt;img src=&#34;/media/images/streamsprites.png&#34;&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The browser can take a while to load lots of images since it has to make a request for each one,
+so I decided to implement icon spriting - baking all the images into one image,
+and using background-position in &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; to make what appears like a standalone&amp;nbsp;icon.
+&lt;/p&gt;
+&lt;p&gt;
+Thankfully, I was already using &lt;a href=&#34;http://compass-style.org/&#34;&gt;&lt;span class=&#34;caps&#34;&gt;SASS&lt;/span&gt;&lt;/a&gt; and &lt;a href=&#34;http://compass-style.org/&#34;&gt;Compass&lt;/a&gt; for my &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt;, and it comes with &lt;a href=&#34;http://compass-style.org/help/tutorials/spriting/
+&#34;&gt;built in&amp;nbsp;spriting.&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;
+After putting my icons in one folder (and sizing them all to be 16*16 pixels), I added this to the top of my .scss&amp;nbsp;file:
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@import &#34;icon/*.png&#34;;
+@include all-icon-sprites;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;
+I also specified sizing and display properties for the special &amp;#8220;icon-sprite&amp;#8221; class in my .scss&amp;nbsp;file:
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.icon-sprite {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  margin-right: 2px;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;
+Compass then auto-generated &lt;span class=&#34;caps&#34;&gt;CSS&lt;/span&gt; rules for my icons - one rule to specify the background for each of them, and a rule per icon to specify the background-position.
+It also applies any of the &amp;#8220;.icon-sprite&amp;#8221; rules it found to all of the generated icon classes. Here&amp;#8217;s a snippet of the auto-generated&amp;nbsp;rules:
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.icon-sprite, .icon-activity, .icon-android, .icon-bodylog, .icon-buddies, .icon-camera, .icon-comment, .icon-edit, .icon-female, .icon-foodlog, .icon-grassfedmeat, .icon-highfive, .icon-home, .icon-homecooked, .icon-localfood, .icon-logs, .icon-organicveg, .icon-profile, .icon-reminder, .icon-settings, .icon-settings2, .icon-stats, .icon-stats2, .icon-sustseafood, .icon-tip {
+  background: url(&#39;/img/icon-s97f5308db7.png&#39;) no-repeat;
+}
+
+.icon-activity {
+  background-position: 0 0;
+}
+
+.icon-android {
+  background-position: 0 -27px;
+}
+
+/* line 99, ../sass/_common.scss */
+.icon-sprite, .icon-activity, .icon-android, .icon-bodylog, .icon-buddies, .icon-camera, .icon-comment, .icon-edit, .icon-female, .icon-foodlog, .icon-grassfedmeat, .icon-highfive, .icon-home, .icon-homecooked, .icon-localfood, .icon-logs, .icon-organicveg, .icon-profile, .icon-reminder, .icon-settings, .icon-settings2, .icon-stats, .icon-stats2, .icon-sustseafood, .icon-tip {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  margin-right: 2px;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;
+I measured the loading performance of my site before and after spriting, using the &lt;a href=&#34;http://www.softwareishard.com/har/viewer/&#34;&gt;&lt;span class=&#34;caps&#34;&gt;HAR&lt;/span&gt; Viewer&lt;/a&gt;, and these are the&amp;nbsp;results:
+&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+   &lt;td&gt;&lt;b&gt;Before:&lt;/b&gt; &lt;td&gt;28 requests &lt;td&gt; 2.61s (onload: 1.92s, DOMContentLoaded: 1.64s)
+  &lt;tr&gt;
+   &lt;td&gt;&lt;b&gt;After:&lt;/b&gt;  &lt;td&gt; 15 requests &lt;td&gt; 1.09s (onload: 817ms, DOMContentLoaded: 600ms)
+&lt;/table&gt;
+
+&lt;p&gt;&lt;p&gt;As you can see, spriting had a significant effect on performance. I definitely recommend spriting (and Compass) for sites that display multiple images on page&amp;nbsp;load.&lt;/p&gt;&lt;/p&gt;            </content>
+        </entry>
+            <entry>
+            <title type="html">everyday i'm learning...</title>
+            <author><name>Pamela Fox</name></author>
+            <link href="/learning/index.html"/>
+            <updated>2010-01-01T00:00:00Z</updated>
+            <published>2010-01-01T00:00:00Z</published>
+            <id>/learning/index.html</id>
+            
+            <content type="html">
+                                            </content>
+        </entry>
+    </feed>

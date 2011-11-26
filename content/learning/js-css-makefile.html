@@ -1,0 +1,28 @@
+---
+title: JS & CSS Compiling, Compression & Cache-Busting
+created: !!timestamp '2011-10-15 10:00:00'
+tags:
+    - performance
+    - css
+    - javascript
+---
+
+<p>
+Everytime I deploy a new version of my CSS and JavaScript to production,
+I run it through a series of steps to ensure code quality and performance:
+</p>
+<ul>
+ <li><b>Code quality:</b> I use <a href="http://www.jshint.com">JSHint</a> to check for JavaScript code quality issues.
+ Sometimes it's a matter of style, but other times it actually finds issues that can become runtime bugs.
+ <li><b>Concatenation:</b> I use <code>cat</code> to combine my JS files and CSS files into one file each, so that the browser
+ can issue less HTTP requests when loading the page.
+ <li><b>Compression:</b> I use <a href="http://code.google.com/closure/compiler/">Closure Compiler</a> to minify my JS and <a href="http://developer.yahoo.com/yui/compressor/">YUI Compressor</a> to minify my CSS,
+ so that those HTTP requests are smaller.
+ <li><b>Cache bust:</b> I append the current timestamp as a query parameter to the JS and CSS in my base template HTML. I serve
+ the files as static files off App Engine which would normally result in browsers caching them forever, but by appending
+ new query parameters for each deploy, I force the browsers to re-download them only when they've changed.
+</ul>
+
+<p>I do all of this in a Makefile, including downloading the necessary tools. You can see the relevant bits in this gist:
+</p>
+<script src="https://gist.github.com/1285624.js?file=Makefile"></script>

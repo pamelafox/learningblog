@@ -1,0 +1,33 @@
+application: everyday-learning
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /favicon.ico
+  static_files: favicon.ico
+  upload: favicon.ico
+
+- url: /apple-touch-icon.png
+  static_files: apple-touch-icon.png
+  upload: apple-touch-icon.png
+
+- url: /atom.xml
+  static_files: atom.xml
+  upload: atom.xml
+
+- url: /learning(/*)
+  static_files: learning/index.html
+  upload: learning/index.html
+
+- url: /learning/(.*)
+  static_files: learning/\1
+  upload: learning/(.*)
+  expiration: 1d
+
+- url: /media
+  static_dir: media
+
+- url: /(.*)
+  static_files: learning/index.html
+  upload: learning/index.html

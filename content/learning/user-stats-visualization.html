@@ -1,0 +1,18 @@
+---
+title: User Stats Visualization with HighCharts
+created: !!timestamp '2011-10-05 10:00:00'
+tags:
+    - javascript
+---
+
+<p>For the first few months of <a href="http://everyday.io">everyday.io</a>'s existence, it was only a small set of users -- family and friends -- and half of them were my buddies on the app. But then a food blogger tweeted it, and over the course of a day, there were 10x the number of users -- all strangers. Since I wasn't buddies with the new users and wouldn't see their updates in my stream, I needed a way of understanding who all these users were and how they were using the app
+</p>
+<p>I wanted simple visualizations of my user demographics & usage data, and after a bit of research on what type of chart to use (i.e. <a href="http://eagereyes.org/techniques/pie-charts">not pie charts</a>), I came up with this stacked horizontal bar chart visualization:
+</p>
+<p><img src="/media/images/userstats.png" style="width:570px">
+<p>
+All the bars add up to 100%, the bar parts show their value and percentage on hover, and the bar parts are colored according to their value. For example, true is green and red is false, browsers and OSes are colored according to their debuggability (Ghrome is green since that's my browser of choice, guess which one is red?), and numeric values are colored in a monotone gradient. The charts are made using <a href="http://www.highcharts.com/">HighCharts</a>, my favorite charting library.
+</p>
+<p>
+It's nice being able to understand more about my users in a glance. :)
+</p>

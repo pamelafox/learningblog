@@ -1,0 +1,37 @@
+{% macro render_excerpt(res, class=None) %}
+<li {{'class='~class if class }} style="line-height: 1.5em; display: block; margin-bottom: 10px;">
+    <time style="float: right; color: #999; text-align: right;" datetime="{{ res.meta.created.strftime('%Y-%m-%d') }}">
+        {{ res.meta.created.strftime('%B %d, %Y').replace(' 0', ' ') }}
+    </time>
+    <a style="font-size: 18px;" href="{{ content_url(res.url) }}">{{ res.meta.title }}</a>
+</li>
+{% endmacro %}
+
+{% macro render_nav(menu, cls=None) -%}
+{% if menu -%}
+<nav {{'class='~cls if cls }}>
+    <ul>
+        {% for item in menu -%}
+        {% set active = False -%}
+        {% if item.type == 'page' -%}
+            {% set active = (resource.url ==
+                site.content.resource_from_relative_path(item.url).url) -%}
+        {% else -%}
+            {% set active = (node ==
+                site.content.node_from_relative_path(item.url)) -%}
+        {%- endif %}
+        {% set classes = ['button', 'white'] -%}
+        {% do classes.append('active') if active -%}
+        {% do classes.append(item.css_class) if item.css_class -%}
+        <li>
+            <a title="{{ item.description }}"
+                class="{{ classes|join(' ') }}"
+                href="{{ content_url(item.url) }}">
+                {{ item.name }}
+            </a>
+        </li>
+        {%- endfor %}
+    </ul>
+</nav>
+{%- endif %}
+{%- endmacro %}

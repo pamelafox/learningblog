@@ -1,0 +1,64 @@
+---
+title: Logging JS Errors on iOS with PhoneGap
+created: !!timestamp '2011-10-26 10:00:00'
+tags:
+    - phonegap
+    - javascript
+---
+
+<p>I've spent the last few days getting my PhoneGap app working on an 
+iPhone (an app which previously worked on Android). The hardest part 
+has been learning to debug in the iOS browser, so I thought I'd post 
+on my findings:
+</p>
+<ul>
+  <li>To view the output of <code>console.log</code>, you must open the XCode console. 
+The iOS browser "Debug console" that most iOS debugging articles mention 
+is only displayed in the standalone Safari browser, not in the WebView (where 
+PhoneGap HTML lives). 
+  <li>There seem to be times when <code>console.log</code> does not log the output 
+(perhaps during loading?) - in that case, <code>alert()</code> always seems to 
+work. 
+  <li>If you log a JS object using <code>console.log</code>, it will just print 
+<code>"Object"</code> by default. You must JSON stringify it to be useful. 
+  <li>You can also use <a href="http://debug.phonegap.com">debug.phonegap.com</a> (hosted weinre) to view the DOM 
+and JS console logs as well. 
+  <li>The WebView browser silently fails on JS errors - it stops running 
+the JS code and does not report the error.  To see the error, you must 
+wrap the offending code in a try/catch block. 
+</ul>
+
+<p>Given all of those learnings, here is my <code>log()</code> wrapper function that I use across my 
+webapp:
+</p>
+
+    function log(something) { 
+        if (window.console){ 
+          if (something instanceof Date) { 
+            something = something.toDateString(); 
+          } 
+          if (isIOS() || isAndroid()) { 
+            if (typeof something == 'object') { 
+              something = JSON.stringify(something); 
+            } 
+            console.log(something); 
+          } else { 
+            console.log(something); 
+          } 
+        } 
+    } 
+
+<p>And I wrap various code blocks in try/catch, like the callback function for AJAX requests: 
+</p>
+
+    try { 
+      onSuccess(processJSON(responseJSON)); 
+    } catch(e) { 
+      log(e); 
+    } 
+
+<p>I posted my observations in the <a href="http://groups.google.com/group/phonegap/browse_thread/thread/62cf653d67e015ba">PhoneGap group</a>
+and the developers there made several recommendations: 1) use <a href="https://chrome.google.com/webstore/detail/geelfhphabnejjhdalkjhgipohgpdnoc">Ripple</a>,
+a Chrome extension for mobile emulation 2) monkey-patch JS functions to always try-catch, as done in this <a href="https://github.com/pmuellr/log-callback-error">library</a>.
+I've taken a break from iOS debugging for a few days, but I'll probably revisit debugging soon and try out their ideas.
+</p>

@@ -1,0 +1,34 @@
+---
+title: Switching from jQuery Mobile to Twitter Bootstrap
+created: !!timestamp '2011-09-08 10:00:00'
+tags:
+    - phonegap
+    - css
+---
+
+<p>
+I've been using jQuery mobile (jQM) to make a mobile-enhanced version of <a href="http://everyday.io">everyday.io</a> for the past few weeks and though I have much respect for the team behind it, I've grown increasingly frustrated with it. Why?
+</p>
+
+<ol>
+<li>It typically enhances by adding additional DOM elements to the original elements - which can help in making them easier to use on a mobile device, but it means that whenever you want to tweak the styles of an enhanced element, you need to dig into the DOM and apply CSS overrides at various levels. If the DOM or inner CSS names change in later jQM versions, you may have to update those CSS overrides. 
+<li>If you dynamically update an enhanced DOM element (like a form input, for example), you often have to tell jQM to force refresh that element, since it needs to redo the added DOM. That means you need jQM-specific JavaScript calls in your code.
+</ol>
+
+<p>I was fine with those issues when I used jQM for an earlier project, but for the everyday.io app, they are becoming bigger issues because: 1) I'm doing more customization, and 2) I'm doing more dynamic form creation and updating.
+</p>
+
+<p>And most importantly, I'm trying to re-use my HTML/CSS/JS across both my the desktop web version and mobile app, and I want minimal difference between them - both so users have a consistent user experience across them, and so that I can write the code just once.
+</p>
+
+<p>So today I scrapped jQM and decided to use just HTML/CSS. And since I suck at making pretty CSS, I'm using <a href="http://twitter.github.com/bootstrap/">Twitter's bootstrap library</a>. It's pure CSS (no JS!), it's simple to use, and it's pretty. It's not specifically designed for mobile, but it works well enough on it and is easy to customize when it doesn't quite work.
+</p>
+
+<p>Here's what the app looked like using jQuery mobile and the default black theme:</p>
+<p><img src="/media/images/mobilemeal_jqm.png" style="width:320px"></p>
+</p>
+<p>Here's what it looks like using Twitter bootstrap and some basic customization:</p>
+<p><img src="/media/images/mobilemeal_bootstrap.jpeg"  style="width:320px"></p>
+</p>
+<p>As you can see, jQuery mobile does create more mobile-optimized form input interfaces (larger areas for clicking, e.g.), but Twitter bootstrap creates clean CSS that I can easily add my own mobile-optimized CSS on top of when necessary. I'm happy I made the switch.
+</p>

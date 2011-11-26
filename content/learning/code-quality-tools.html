@@ -1,0 +1,24 @@
+---
+title: Code Quality Tools
+created: !!timestamp '2011-10-21 10:00:00'
+tags:
+    - python
+    - javascript
+---
+
+<p>
+Now that my application code is getting cleaner, I wanted to make it even cleaner by using automated code quality tools.
+</p>
+<p>
+First, I ran <a href="http://jshint.com">jshint</a> over all my *.js files and fixed a bunch of little issues (like using "===" instead of "==" in many places). Here's how I setup my Makefile to download jshint and run it: 
+</p>
+<script src="https://gist.github.com/1285624.js?file=Makefile"></script>
+
+<p>
+Then I ran <a href="http://svn.python.org/projects/python/trunk/Tools/scripts/reindent.py">reindent.py</a> script to fix the indenting on all my *.py files. I had been using 2-space indents, as that's we used at Google and also what I use in JavaScript, but I was convinced to go with the PEP8 standard, 4 spaces.
+</p>
+
+<p>
+Then I downloaded <a href="https://github.com/Kronuz/SublimeLinter">SublimeLinter</a>, a plugin for Sublime Text that automatically checks your code as you write it, using jshint for JS and pyflakes for Python. I configured that to ignore a few PEP8 warnings in the settings JSON ("pep8_ignore": [ "E501", "E221", "E203"]).
+I'm quite liking SublimeLinter - its lint tools actually catch a few things that could result in real bugs and its nice to be able to correct my code as soon as I type it.
+</p>

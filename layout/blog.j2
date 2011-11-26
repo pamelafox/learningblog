@@ -1,0 +1,74 @@
+{% extends "base.j2" %}
+
+{% block main -%}
+<article class="post">
+    <div class="page-header">
+        <h1 class="title">
+            <a href="{{ content_url(resource.url) }}">
+                {{ resource.meta.title }}
+            </a>
+        </h1>
+        
+
+        <time datetime="{{ resource.meta.created.strftime('%Y-%m-%d') }}">
+            {{ resource.meta.created.strftime('%A, %B %d, %Y').replace(' 0', ' ') }}
+        </time>
+
+        <div style="float:right">
+            <a href="http://twitter.com/share"
+                class="twitter-share-button"
+                data-count="horizontal" 
+                data-via="{{ tweet_via }}">Tweet</a>
+                <script type="text/javascript"
+                    src="http://platform.twitter.com/widgets.js"></script>
+            <!-- Place this tag where you want the +1 button to render -->
+            <g:plusone size="small"></g:plusone>
+
+            <!-- Place this render call where appropriate -->
+            <script type="text/javascript">
+              (function() {
+                var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+                po.src = 'https://apis.google.com/js/plusone.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+              })();
+            </script>
+        </div>
+
+        <div style="clear:right"></div>
+
+    </div>
+    
+    {% filter markdown|typogrify -%}
+    {% mark post -%}
+    {% block post -%}{%- endblock %}
+    {%- endmark %}
+    {%- endfilter %}
+
+    {% if resource.meta.tags %}
+    <ul class="tags pills">
+    {% for tag in resource.meta.tags %}
+    <li><a class="small" href="{{ content_url('blog/tags/'~tag~'.html') }}">
+            {{ tag }}
+    </a>
+    {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'everydayimlearning';
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</article>
+
+{%- endblock %}

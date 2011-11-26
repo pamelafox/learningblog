@@ -1,0 +1,33 @@
+---
+title: Grammatical Personalization in JS
+description: >
+    Temper. Temper. Temper.
+created: !!timestamp '2011-10-11 10:00:00'
+tags:
+    - javascript
+---
+
+<p>
+In <a href="http://everyday.io">everyday.io</a>, I have various places where I describe something about a user. For example:
+</p>
+<ul>
+<li>"Pamela Fox filled out her logs 3 days in a row.
+<li>"In the last week, you haven't logged any measurements."
+</ul>
+<p>
+I wanted to be able to construct those sentences in JavaScript with some sort of mini templating language. I didn't find any existing libraries for it, so I wrote my own. Now to generate the above strings, I can write stuff like:
+</p>
+
+{% raw %}
+    personalize('{{ They|name }}' filled out {{ their }} logs 3 days in a row.', 
+    {gender: 'male', person: 'third', name: 'Pamela Fox'});
+    personalize('In the last week, {{ they|name }} {{ have|not }} logged any measurements.',
+    {gender: 'male', person: 'first'});
+{% endraw %}
+
+<p>
+You can see the code for the library in <a href="https://gist.github.com/1279831">this gist</a> and check out a <a href="http://jsbin.com/iyemiz">live demo</a> on jsfiddle.
+</p>
+
+<p>I built the library for my own use and limited set of use cases, but it could be a starting ground for other people with the same goal. If you are planning on also translating your strings into multiple languages, however, you would probably need an entirely different technique -- grammar varies far too much across languages. Luckily, I have no immediate plans for internationalization and I can stick with this library.
+</p>

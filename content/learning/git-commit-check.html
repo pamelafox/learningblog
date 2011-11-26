@@ -1,0 +1,21 @@
+---
+title: Pre-Deploy Git Check
+created: !!timestamp '2011-09-30 10:00:00'
+tags:
+    - workflow
+---
+
+<p>Since I'm the only one developing <a href="http://everyday.io">everyday.io</a>, I've been content to store it in a Dropbox folder and use a local
+git repository for version control. But I got nervous thinking about what would happen if something went horribly wrong while I was unavailable (like on a plane),
+and decided I needed a backup collaborator -- someone who could quickly checkout the code and deploy a fix.
+</p>
+<p>I probably could have shared the Dropbox folder with them, but I instead opted for a private <a href="http://github.com">Github</a> plan for $7 a month, which lets me share my code repository with my backup collaborator. 
+Plus, I now get to browse my code history and commits via Github's slick online interface.
+</p>
+
+<p>
+I often forgot to git commit and push my changes, so I added <a href="http://stackoverflow.com/questions/5143795/how-can-i-check-in-a-bash-script-if-my-local-git-repo-has-changes-or-not/5148851#5148851">this check</a> to my Makefile which errors if there are uncommited changes. I run the check everytime I deploy my code to App Engine, to make sure the code always reflects what's deployed.
+</p>
+
+<p>So far, the workflow seems to work...and now I can fly a plane in peace. ☺
+</p>

@@ -1,0 +1,136 @@
+---
+title: Porting from jQuery to Zepto
+created: !!timestamp '2011-11-19 10:00:00'
+tags:
+    - phonegap
+    - performance
+    - jquery
+    - zepto
+    - android
+---
+
+<p>In my quest for better performance in my PhoneGap Android app, I finally decided to switch from using jQuery to <a href="http://zeptojs.com/">Zepto</a>,
+a framework that boasts a similar API with a much smaller footprint and additionally offers mobile specific touch events.
+Of course, since Zepto is designed to be lighter weight than jQuery, it does not offer all the same methods &mdash; and the methods
+that it does offer sometimes differ in their arguments. This makes sense but it means that porting from jQuery
+to Zepto requires learning how their differences affect your code, and how you can workaround them.
+</p>
+
+<p>Since other developers might start going down the porting path too, I thought I'd write a post on the differences I encountered while porting.
+Because I reuse much of my application code between my Phonegap app and desktop web app and I'm not yet ready to eliminate jQuery
+in my desktop app, I wanted to port my code over in a way that would mean it would work with either jQuery or Zepto as a base framework.
+That effectively meant that I tried to keep my code the same, and simply add to the Zepto JS file where needed. 
+I'll explain my ports below and then show my Zepto additions at the end.
+</p>
+
+<p>This post got a bit long, so here are quick links to the sections:</p>
+<ul>
+ <li><a href="#core">Porting core functionality</a>
+ <li><a href="#plugins">Porting plugins</a>
+ <li><a href="#summary">Summary: What's different</a>
+ <li><a href="#zeptogist">My Zepto modifications</a>
+ <li><a href="#perf">Performance comparison</a>
+ <li><a href="#conclusion">Conclusion: Was it worth it?</a>
+</ul>
+
+<div class="page-header">
+<h3 id="core">Porting core functionality</h3>
+</div>
+
+<p>I spent most of my time porting 3rd party jQuery plugin code, as they tend to use the more esoteric jQuery features, but I also found a few places
+in my own application code where I was using jQuery functionality that's missing from Zepto:</p>
+<ul>
+ <li><b>CORS</b>:
+  <p>I use CORS (cross-domain XMLHttpRequests) to communicate from my mobile app to my server, and that means setting <code>xhrFields</code> in <a href="http://api.jquery.com/jQuery.ajax/">jQuery.ajax()</a>,
+ something that isn't yet supported in Zepto. Luckily, there's <a href="https://github.com/madrobby/zepto/pull/313">a patch</a> for it, and I applied that. 
+ I also discovered <a href="https://github.com/madrobby/zepto/issues/319">a bug</a> with sending empty strings in CORS requests, and I work around that by sending <code>null</code> instead.
+ </p>
+ <li><b>scrollTop</b>:
+  <p>I use <a href="http://api.jquery.com/scrolltop/">jQuery.scrollTop()</a> to reset the scroll in my mobile app on page transition, so I took and Zepto-ified the jQuery implementation.</p>
+
+ <li><b>position</b>:
+  <p>I use <a href="http://api.jquery.com/position/">jQuery.position()</a> to calculate where to scroll to in some cases, and Zepto only supports <code>offset()</code>. I checked out the jQuery source code for calculating position and stuck that inside Zepto.</p>
+
+ <li><b>non-standard selectors</b>: 
+  <p>jQuery supports several convenience selectors that aren't defined in the w3 spec and simply special cases them in their code, and these won't work as selectors in Zepto. There are some that correspond to methods - <code>":first"</code> is <code>.first()</code> in Zepto, and <code>":last"</code> is <code>last()</code>. There are others with no equivalents, like <code>":hidden"</code>, and <code>":visible"</code>, and I just removed my usage of them or checked display values manually. (I didn't feel like checking the jQuery source for them.)
+  </p>
+
+  <li><b>valueless attributes</b>:
+  <p>There are times when I set and remove valueless attributes on form elements, like <code>"checked"</code>, <code>"readonly"</code>, and <code>"disabled"</code>. In jQuery, I used <code>.attr('disabled', false)</code>. That's apparently been replaced in jQuery 1.7 by <code>.prop('disabled', false)</code>. Neither will work in Zepto, however, but <code>removeAttr('disabled')</code> will. Since I want my code working with both, I now have <code>.attr('disabled', false).removeAttr('disabled')</code>, just to be sure.
+  </p>
+</ul>
+
+<h3 id="plugins">Porting plugins</h3>
+
+<p>I use five jQuery plugins in my mobile app, only one of which I wrote myself, and they took the longest to port. 
+For all of these plugins, I started off by changing the final line in the file from <code>'})(window.jQuery);'</code> to  <code>'})(window.jQuery || window.Zepto);'</code> and then hoped for the best.
+</p>
+<ul>
+ <li><b>ColorSlider</b>:
+  <p>I wrote this plugin to give users a colorful slider (red to green), and the only jQuery function it was missing was <a href="http://api.jquery.com/outerwidth/">outerWidth()</a>, so I wrote one based on the jQuery implementation. In doing so, I discovered that the Zepto width() function includes the padding and border, which jQuery.width() doesn't, so I submitted <a href="https://github.com/pamelafox/zepto/commit/5c8538e147a8263d1d0e3ce12d44a8a15d7f5457">a patch</a> clarifying that in the Zepto docs.
+  </p>
+
+ <li><b><a href="http://api.jquery.com/category/plugins/templates/">jQuery Templates</a></b>:
+ <p>I was pretty worried about this port, but then found out that the jQuery templates was being deprecated in favor of a non-jQuery dependent library, <a href="https://github.com/BorisMoore/jsrender">jsRender/jsViews</a>. That library is in beta and the docs are minimal, but the templating syntax is largely the same, and the author responded quickly to <a href="https://github.com/BorisMoore/jsrender/issues/25">my upgrade question</a>. One thing to note, though: the jsViews library tries to take the global <code>$</code> variable if it doesn't see jQuery defined, so you have to call <code>$.noConflict()</code> after loading it if you want to use <code>$</code> with Zepto instead &mdash; but you don't want to call that if you are actually using jQuery. Here's what I have after I load my scripts: <code>if (window.Zepto) $.noConflict();</code>
+ </p>
+
+ <li><b><a href="http://timeago.yarp.com/">timeago</a></b>:
+ <p>This handy library turns timestamps into pretty times like "1 day ago" and also auto refreshes elements with timestamps on an interval. It relies on <a href="http://api.jquery.com/jQuery.trim/">jQuery.trim</a>, which I just copied from their codebase. Along with the DateInput plugin, it relies on the ability to store objects as data attributes (instead of just strings), and thankfully, there's a <a href="https://github.com/madrobby/zepto/blob/master/src/data.js">data.js</a> in the Zepto codebase that I copied into my Zepto JS to handle that. </p>
+
+ <li><b><a href="https://github.com/twitter/bootstrap/blob/master/js/bootstrap-modal.js">Twitter Bootstrap modal</a></b>: 
+ <p>This is a simple modal library that's designed to work with either jQuery or <a href="http://ender.no.de/">Ender</a>(a lightweight package library), so it already relied on minimal jQuery features. It does attach functions to <a href="http://api.jquery.com/jQuery.support/">$.support</a>, which Zepto doesn't define, so I added a one-liner to define it. It also uses <a href="http://api.jquery.com/jQuery.proxy/">$.proxy</a>, which I copied from the jQuery codebase.</p>
+
+ <li><b><a href="http://flowplayer.org/tools/dateinput/">jQuery Tools DateInput</a></b>:
+ <p>This was by far the hardest plugin to port, and I did look around briefly to see if I should just switch to a completely different pure JS datepicker library, but I quite like this one so I stuck with with it. First, it uses <code>$.expr</code>, a jQuery object that isn't actually documented and (from what rumors tell me) might actually go away soon. I wasn't actually using the results of that function, so I simply defined the object so that the code would not error out. It also uses <a href="http://api.jquery.com/clone/">jQuery.clone</a> and <a href="http://api.jquery.com/event.isDefaultPrevented/">Event.isDefaultPrevented</a>, which were simple enough to write my own versions of.</p><p>Now we get to the tricky parts - methods that exist in both frameworks but don't have the
+ same interface or behavior. I filed bugs on most of these, but the Zepto team could decide to keep their interface the same for simplicity:
+ Zepto doesn't handle multiple self-closing tags in a creation string the same way as jQuery (<a href="https://github.com/madrobby/zepto/issues/322">Issue 322</a>),  Zepto does not assign this to the current iterated object in <code>each()</code> (<a href="https://github.com/madrobby/zepto/issues/295#issuecomment-2801449">Issue 295</a>), and Zepto does not include an option for deep copy in the <code>extend()</code> function, and Zepto doesn't handle non-DOM objects in expressions/events (<a href="https://github.com/madrobby/zepto/issues/321">Issue 321</a>, That last one unfortunately required a bit of dirty finagling in the DateInput code itself, as its non obvious how to extend Zepto to support binding and firing events on non-DOM objects.</p>
+
+</ul>
+
+<h3 id="summary">Summary: What's different</h3>
+
+<p>
+To summarize, the following jQuery functionality is missing from Zepto (and much of it is in the gist below):
+<ul>
+ <li><code>scrollTop()</code>
+ <li><code>position()</code>
+ <li><code>":first"</code>, <code>":last"</code>, <code>":hidden"</code>, <code>":visible"</code>
+ <li><code>prop()</code>
+ <li><code>outerWidth()</code>
+ <li><code>trim()</code>
+ <li><code>support()</code>
+ <li><code>proxy()</code>
+ <li><code>expr()</code>
+ <li><code>isDefaultPrevented()</code>
+</ul>
+
+<p>And this functionality differs in behavior/arguments:</p>
+<ul>
+ <li><code>attr('disabled', false);</code>
+ <li><code>ajax() CORS</code>
+ <li><code>width()</code>
+ <li><code>data()</code>
+ <li><code>each()</code>
+ <li><code>extend()</code>
+</ul>
+
+<h3 id="zeptogist">My Zepto modifications</h3>
+
+<p>Most of the above issues were resolved by defining functions or objects in Zepto, and this gist shows all of those:
+</p>
+<script src="https://gist.github.com/1379704.js?file=zepto-extras.js"></script>
+
+<p>I also made a few tweaks to the core Zepto code, and you can see those in <a href="http://diffchecker.com/YhGN69g">this diff</a>
+(but not all of them are necessarily successful tweaks, nor are they tested.)</p>
+
+<h3 id="perf">Performance comparison</h3>
+
+<p>Since my main point in porting over to Zepto was to improve my loading performance, I celebrated the successful porting by measuring the loading times for my page.
+I used <a href="https://gist.github.com/1302665">this timing code</a> and compared the differences between including a minified jQuery 1.7 script tag and a minified Zepto script tag, both for a fresh app install and an app re-launch. On average, switching to Zepto shaved 22% off my total loading time. For the detailed results, check out <a href="https://docs.google.com/spreadsheet/ccc?key=0Aq_a4WNAMuCEdDdjSlhyWXJaTkQ0TVJFc1k1RzlTTlE#gid=0">this spreadsheet</a>.
+</p>
+
+<h3 id="conclusion">Was it worth it?</h3>
+
+<p>I'm happy that I ported, but it's not a decision to be taken lightly. jQuery alternatives are still in early stages, so if you use them, you have to think of yourself as a beta user, be prepared for issues, be prepared for lack of documentation, and do the responsible thing &mdash; report whatever issues or workarounds you find.
+And on that note, thanks to the Zepto authors for bearing with my barrage of issues over the last few days. :)
+</p>

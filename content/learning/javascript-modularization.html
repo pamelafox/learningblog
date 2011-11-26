@@ -1,0 +1,47 @@
+---
+title: Modularizing My JavaScript
+created: !!timestamp '2011-10-13 10:00:00'
+tags:
+    - javascript
+---
+<p>
+I generally try not to get too distracted by the code quality in <a href="http://everyday.io">everyday.io</a> and focus on user-facing quality instead, but after a while, it hurts my head knowing that my code is messy -- and makes me not want to mess with the code further. So, I spent yesterday spring cleaning my JavaScript.</p>
+<p>
+One of the big improvements was to take my smattering of global functions and put them in a namespace. There are a lot of ways to namespace in JS, but I opted for the module pattern described in <a href="http://javascriptweblog.wordpress.com/2010/12/07/namespacing-in-javascript/">this article</a> (#3).
+</p>
+<p>
+Here's the basic template for each module's JavaScript file -- notice how this technique lets me create functions in each module that are only used inside the module, and aren't exposed outside of it.
+</p>
+
+    var ED = ED || {};
+
+    ED.util = (function() {
+
+      function doSomethingPrivate() {
+      }
+
+      function doSomething() {
+        doSomethingPrivate();
+      }
+
+      return {
+        doSomething: doSomething
+      }
+    })();
+
+<p>
+I ended up with 6 JS modules used across the web and mobile (PhoneGap) version of the app.
+</p>
+<table>
+ <tr><td><code>ED.util</code>   <td>Utility functions, app-independent
+ <tr><td><code>ED.data</code>   <td>Global data constant definitions
+ <tr><td><code>ED.models</code> <td>Classes representing data from the server DB
+ <tr><td><code>ED.shared</code> <td>App functionality shared by web and mobile 
+ <tr><td><code>ED.web</code>    <td>Web specific functionality
+ <tr><td><code>ED.mobile</code> <td>Mobile specific functionality
+</table>
+<p>
+ I could have put the first 4 of these in "shared" but I like the conceptual division, and I'm concatenating them together before serving them to the user, so it doesn't hurt to have multiple files.
+</p>
+
+<p>Now that my code is cleaner and more manageable, I can more confidently iterate on user-facing features!</p>

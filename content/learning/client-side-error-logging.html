@@ -1,0 +1,21 @@
+---
+title: Client-Side Error Logging
+created: !!timestamp '2011-10-04 10:00:00'
+tags:
+    - javascript
+---
+
+<p>After setting up my Python code to <a href="/learning/emailing-error-logs.html">send server-side errors to my inbox</a>, I wasn't satified. I wanted to know about JavaScript errors, too! So I  set up my base template to send JavaScript errors to my server and log those as errors. Now I find out about all errors immediately in my inbox, and I can deploy a fix before it affects users for too long. So far I've found a couple errors this way that otherwise I wouldn't have known about (due to different user behaviors + browsers).
+</p>
+<p>I use this JavaScript for sending errors to a handler on the server, which then logs them as an error using <code>logging.error</code>:</p>
+<script src="https://gist.github.com/1261016.js?file=gistfile1.js"></script>
+
+<p>When I tweeted about my solution, I was pointed to a few related projects and techniques:</p>
+<ul>
+ <li><a href="http://blog.protonet.info/post/9620971736/exception-notifier-javascript">An article</a> with various tips on logging JS errors.
+ <li><a href="http://jserrlog.appspot.com/">jserrlog.appspot.com</a>: A solution hosted on App Engine, where you just drop in the JS and view the logs on their server.
+ <li><a href="http://errorception.com/">Errorception</a>: A startup devoted to "painless javascript error tracking" and will include more cross-browser logging, emails, and web hooks. Sounds promising!
+</ul>
+
+<p>Since deploying my solution, I've discovered that <code>window.onerror</code> doesn't work in all browsers (even some "modern" ones like Android), so if you are looking to catch every error, you should checkout those links to see the workarounds they employ.
+</p> 

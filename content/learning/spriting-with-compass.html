@@ -1,0 +1,73 @@
+---
+title: Spriting with Compass
+created: !!timestamp '2011-08-28 10:00:00'
+tags:
+    - performance
+    - css
+---
+
+<p>I use little icons in various places on <a href="http://everyday.io">everyday.io</a>, like to show
+food bonuses in the stream:</p>
+<p>
+<img src="/media/images/streamsprites.png">
+</p>
+
+<p>The browser can take a while to load lots of images since it has to make a request for each one,
+so I decided to implement icon spriting - baking all the images into one image,
+and using background-position in CSS to make what appears like a standalone icon.
+</p>
+<p>
+Thankfully, I was already using <a href="http://compass-style.org/">SASS</a> and <a href="http://compass-style.org/">Compass</a> for my CSS, and it comes with <a href="http://compass-style.org/help/tutorials/spriting/
+">built in spriting.</a>
+</p>
+<p>
+After putting my icons in one folder (and sizing them all to be 16*16 pixels), I added this to the top of my .scss file:
+</p>
+    @import "icon/*.png";
+    @include all-icon-sprites;
+
+<p>
+I also specified sizing and display properties for the special "icon-sprite" class in my .scss file:
+</p>
+    .icon-sprite {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      margin-right: 2px;
+    }
+
+<p>
+Compass then auto-generated CSS rules for my icons - one rule to specify the background for each of them, and a rule per icon to specify the background-position.
+It also applies any of the ".icon-sprite" rules it found to all of the generated icon classes. Here's a snippet of the auto-generated rules:
+</p>
+    .icon-sprite, .icon-activity, .icon-android, .icon-bodylog, .icon-buddies, .icon-camera, .icon-comment, .icon-edit, .icon-female, .icon-foodlog, .icon-grassfedmeat, .icon-highfive, .icon-home, .icon-homecooked, .icon-localfood, .icon-logs, .icon-organicveg, .icon-profile, .icon-reminder, .icon-settings, .icon-settings2, .icon-stats, .icon-stats2, .icon-sustseafood, .icon-tip {
+      background: url('/img/icon-s97f5308db7.png') no-repeat;
+    }
+
+    .icon-activity {
+      background-position: 0 0;
+    }
+
+    .icon-android {
+      background-position: 0 -27px;
+    }
+
+    /* line 99, ../sass/_common.scss */
+    .icon-sprite, .icon-activity, .icon-android, .icon-bodylog, .icon-buddies, .icon-camera, .icon-comment, .icon-edit, .icon-female, .icon-foodlog, .icon-grassfedmeat, .icon-highfive, .icon-home, .icon-homecooked, .icon-localfood, .icon-logs, .icon-organicveg, .icon-profile, .icon-reminder, .icon-settings, .icon-settings2, .icon-stats, .icon-stats2, .icon-sustseafood, .icon-tip {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      margin-right: 2px;
+    }
+
+<p>
+I measured the loading performance of my site before and after spriting, using the <a href="http://www.softwareishard.com/har/viewer/">HAR Viewer</a>, and these are the results:
+</p>
+<table>
+  <tr>
+   <td><b>Before:</b> <td>28 requests <td> 2.61s (onload: 1.92s, DOMContentLoaded: 1.64s)
+  <tr>
+   <td><b>After:</b>  <td> 15 requests <td> 1.09s (onload: 817ms, DOMContentLoaded: 600ms)
+</table>
+
+ <p>As you can see, spriting had a significant effect on performance. I definitely recommend spriting (and Compass) for sites that display multiple images on page load.</p>
