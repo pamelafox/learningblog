@@ -1,0 +1,132 @@
+---
+title: Upgrading from jQuery Templates to jsRender
+created: !!timestamp '2011-12-05 10:00:00'
+tags:
+    - jquery
+    - zepto
+    - javascript
+---
+{% raw %}
+<p>
+In making my recent port from jQuery to Zepto, I was the most worried about porting over from jQuery templates - I knew there were other templating engines out there (like <a href="https://github.com/janl/mustache.js">mustache.js</a>, which comes highly recommended) but I also know templating engines can be vastly different and I didn't want to spend a lot of time porting.
+</p>
+
+<p>
+Fortunately, I found out that jQuery templates have actually been deprecated in favor of <a href="https://github.com/BorisMoore/jsrender">jsRender</a>, a revision of the library that isn't dependent on jQuery. Perfect!
+</p>
+<p>The templating language for jsRender is largely the same as jQuery templates, with a few purely aesthetic syntax changes and one logical difference &mdash; atleast from the perspective of the parts that I was using. The jsRender library is still in development, so the differences might change in the future, but in the meantime, I thought I'd write up a quick upgrade guide for anyone else porting over.
+</p>
+
+<div class="page-header">
+ <h3 id="syntax">Syntax Changes</h3>
+</div>
+
+<p>The operators are now prefixed with a "#". You can pretty much do a search and replace to port them over - <code>{{if}}</code> to <code>{{#if}}</code>,
+<code>{{else}}</code> to <code>{{#else}}</code>, and <code>{{each}}</code> to <code>{{#each}}</code>.
+</p>
+
+<p>Previously, variables were outputted with <code>${var}</code> - now, variables are outputted using the same double brackets as operators, like so: <code>{{=var}}</code> and <code>{{=var.property}}</code>. If you're using a server-side templating engine that also uses that bracket notation for templating, you will need to instruct the engine to ignore the jsRender templates. For Jinja2 templates, that means surrounding the script tags with <code>{&#37; raw &#37;}{&#37; endraw &#37;}</code>.
+</p>
+
+<p>In addition, the syntax for specifying you don't want HTML escaping changed from <code>{{html var}}</code> to <code>{{var!}}</code> (notice the exclamation mark at the end).
+Finally, if you want to access the value of the currently referenced variable, the syntax changed from <code>${$value}</code> to <code>{{=$data}}</code>.
+</p>
+
+<p>To give you an idea of what an upgraded template would look like, here's some example data and templates:</p>
+
+<pre><code class="javascript">var templateData = {
+  label: 'Comments on post for Wednesday, Dec. 5th',
+  comments: [
+     type: 'freetext',
+     creator: {fullName: 'Pamela Fox', profileUrl: 'http://everyday.io/user/1'},
+     textHtml: 'Have you tried macademia nut oil instead? You can get it from &lt;a href="http://www.amazon.com"&gt;.'
+   ]
+}
+
+</code></pre>
+
+<p>Using jQuery templates:</p>
+<pre><code class="javascript">var dom = $('#stream-comment-tmpl').tmpl(templateData);
+</code></pre>
+<pre><code class="no-highlight">&lt;script id=&quot;stream-comment-tmpl&quot; type=&quot;text/x-jquery-tmpl&quot;&gt;
+  &lt;span&gt;${label}&lt;/span&gt;
+  {{each comments}}
+  &lt;div class=&quot;stream-comment&quot;&gt;
+    {{if type == 'highfive'}}
+     &lt;div&gt;
+      &lt;span class=&quot;icon-highfive&quot;&gt;&lt;/span&gt;
+      High five from &lt;a href=&quot;${creator.profileUrl}&quot;&gt;${creator.fullName}&lt;/a&gt;!
+     &lt;/div&gt;
+    {{else}}
+     &lt;a href=&quot;${creator.profileUrl}&quot;&gt;${creator.fullName}&lt;/a&gt;:
+     {{html textHtml}}
+    &lt;/div&gt;
+    {{/if}}
+  &lt;/div&gt;
+  {{/each}}
+&lt;/script&gt;
+</code></pre>
+
+<p>Using jsRender templates:</p>
+<pre><code class="javascript">var template = $.template('stream-comment-tmpl', document.getElementById('stream-comment-tmpl').innerHTML);
+var html = $.render(templateData, templateId);
+</code></pre>
+<pre><code class="html">&lt;script id=&quot;stream-comment-tmpl&quot; type=&quot;text/jsrender-tmpl&quot;&gt;
+  &lt;span&gt;{{=label}}&lt;/span&gt;
+  {{#each comments}}
+  &lt;div class=&quot;stream-comment&quot;&gt;
+    {{#if type == 'highfive'}}
+     &lt;div&gt;
+      &lt;span class=&quot;icon-highfive&quot;&gt;&lt;/span&gt;
+      High five from &lt;a href=&quot;{{=creator.profileUrl}}&quot;&gt;{{=creator.fullName}}&lt;/a&gt;!
+     &lt;/div&gt;
+    {{#else}}
+     &lt;a href=&quot;{{=creator.profileUrl}}&quot;&gt;{{=creator.fullName}}&quot;&lt;/a&gt;:
+     &lt;div&gt;{{=textHtml!}}&lt;/div&gt;
+    {{/if}}
+  &lt;/div&gt;
+  {{/each}}
+&lt;/script&gt;
+</code></pre>
+
+<div class="page-header">
+ <h3 id="syntax">Array Handling</h3>
+</div>
+
+<p>In jQuery templates, you could pass null as a value in an array and use the if operator to test whether it was defined. In jsRender, the template will not be called at all for a null value. Instead, you need to define objects in the array, set an object property to null, and check to see if that object property is defined. 
+The reasoning behind the change is discussed more in <a href="https://github.com/BorisMoore/jsrender/issues/27">this issue</a>.
+</p>
+<p>To give you an idea of the change, here's a before and after - notice I had to change the data format itself.</p>
+
+<p>Using jQuery templates:</p>
+<pre><code class="javascript">var templateData = ['Walked to work', null, null, 'Biked to work'];
+</code></pre>
+<pre><code class="html">&lt;script id=&quot;notes-mini-tmpl&quot; type=&quot;text/x-jquery-tmpl&quot;&gt;
+&lt;div&gt;
+  {{each dates}}
+    {{if $value}}
+     ${value}
+    {{else}}
+     No notes for this date.
+    {{/if}}
+  {{/each}}
+&lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p>Using jsRender templates:</p>
+<pre><code class="javascript">var templateData = [{notes: 'Walked to work.', {notes: null}, {notes: null}, {notes: 'Biked to work'}];
+</code></pre>
+<pre><code class="html">&lt;script id=&quot;notes-mini-tmpl&quot; type=&quot;text/jsrender-tmpl&quot;&gt;
+&lt;div&gt;
+  {{#each dates}}
+    {{#if $notes}}
+     {{=notes}}  
+    {{#else}}
+     No notes for this date.
+    {{/if}}
+  {{/each}}
+&lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+{% endraw %}
