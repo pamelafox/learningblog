@@ -16,17 +16,12 @@
   <link rel="shortcut icon" href="{{ media_url('/favicon.ico') }}">
   <link rel="apple-touch-icon" href="{{ media_url('/apple-touch-icon.png') }}">
   {% endblock favicons %}
-  <link href="http://fonts.googleapis.com/css?family=Didact Gothic&subset=latin" rel="stylesheet" type="text/css">
   {% block css %}
   <link rel="stylesheet" href="{{ media_url('css/all-blog-min.css') }}">
   <link rel="stylesheet" href="{{ media_url('css/syntax.css') }}">
   <style>
-  pre code {
+  code, pre {
     background-color: transparent;
-  }
-  code {
-    background-color: transparent;
-    font-weight: bold;
   }
   .post img {
     border: 1px solid #ccc;
@@ -108,6 +103,7 @@
 
   {% block scripts %}
   <script src="{{ media_url('js/libs/zepto-min.js') }}"></script>
+  <script src="http://yandex.st/highlightjs/6.1/highlight.min.js"></script>
   {% endblock scripts %}
 
   {% block analytics %}
@@ -133,6 +129,7 @@ $(document).ready(function() {
 
   detectHash();
 });
+hljs.initHighlightingOnLoad();
 </script>
 
   {% endblock js %}
