@@ -20,6 +20,11 @@ handlers:
   static_files: learning/index.html
   upload: learning/index.html
 
+- url: /learning/tags/(.*)
+  static_files: learning/tags/\1
+  upload: learning/tags/(.*)
+  expiration: 1d
+
 - url: /learning/(.*)
   static_files: learning/\1
   upload: learning/(.*)
