@@ -6,6 +6,7 @@ gen:
 
 clean:
 	rm -rf deploy/learning/*;
+	rm -rf deploy/media/*;
 
 deploy:
 	/usr/local/bin/appcfg.py update deploy;

@@ -1,0 +1,87 @@
+---
+title: Using 3-Legged OAuth APIs with Flask
+created: !!timestamp '2011-12-09 10:00:00'
+tags:
+    - flask
+    - appengine
+---
+
+<p>
+
+<img src="/media/images/withings.jpg" style="float: left; margin: 10px; width:150px;">
+The <a href="http://www.withings.com/en/bodyscale">Withings body scale</a> is a nifty device &mdash; after you connect it to your wireless network and create an account, it  wirelessly transmits your measurements to its site. It also tries to estimate your body fat ratio, so that even when your weight stays the same, you can see if your body fat ratio is changing. In the last week, I had several <a href="http://www.everyday.io">everyday.io</a> users start using a Withings scale to monitor their weight while they improve their eating habits, so I wanted to let them connect their accounts to their Withings accounts.</p>
+
+<p>Fortunately, Withings offers an <a href="http://www.withings.com/en/api/">API</a> for accessing user measurements. Their API uses OAuth for authentication and JSON for the responses. Since users could enter measurements at any time and they don't want developers polling their API constantly, they do the smart thing and let developers add subscriptions for each user, so that a URL on your server is pinged whenever there are updates for a user. The API is well-designed and standards-compliant, so I was looking forward to integrating with it.
+</p>
+
+<p>
+<img src="/media/images/oauth.png" style="width: 150px; float: right; margin: 10px;">
+The tricky part of using any OAuth API is setting up the flow &mdash; your site has to generate a request token from the OAuth provider, redirect the user to the OAuth provider to grant access, and then once the provider redirects back, your site has to exchange the request token for an access token and save the credentials. Finally, with those credentials, you can actually start using the API. Since the OAuth flow involves redirects and saving session information, the implementation varies depending on the server-side framework you're using. 
+</p>
+
+<p>For <a href="http://www.everyday.io">everyday.io</a>, I'm using the <a href="http://flask.pocoo.org/">Flask Python microframework</a> on Google App Engine, so I started my integration by looking for Flask OAuth examples. I started with the <a href="http://packages.python.org/Flask-OAuth/">Flask OAuth extension</a>, which wraps on top of <a href="https://github.com/simplegeo/python-oauth2">the oauth2 library</a> and provides various decorators for retrieving the session tokens and handling the redirect. The extension worked, but since I wanted to customize it more, I decided to go straight to the source and just write URL handlers and a <a href="https://gist.github.com/1448061">Withings client library</a> based on that oauth2 library. You can check out that gist to see the Withings client code, and read on for a description of my URL handlers. 
+</p>
+
+<p>To start off the authentication process, I have this <code>authorize_withings()</code> URL handler that creates a <code>WithingsClient</code> with my key and secret (provided by Withings on registration), gets a request token, saves them in the session as a tuple, and redirects to the authorization URL.
+</p>
+
+<pre><code class="python">@app.route('/authorize-withings')
+def authorize_withings():
+    withings_client = withings.WithingsClient(WITHINGS_KEY, WITHINGS_SECRET)
+    callback_url    = (util.get_host() + url_for('handle_withings_authorization') 
+    request_token   = withings_client.get_request_token(callback=callback_url)
+    session[SESSION_WITHINGS_TOKEN] = (
+        request_token['oauth_token'],
+        request_token['oauth_token_secret']
+    )
+    auth_url = withings_client.get_authorization_url(request_token) 
+    return redirect(auth_url)
+</code></pre>
+
+<p>Withings should then redirect back to my <code>handle_withings_authorization()</code> URL handler that creates a <code>WithingsClient</code> (with the request token from the session), requests an access token, and saves the token as a property on the current <code>User</code> entity. By saving it in the datastore instead of session,
+I can access it at any time in the future too, not just for this session.
+</p>
+
+<pre><code class="python">@app.route('/handle-withings-authorization')
+def handle_withings_authorization():
+    request_token   = session[SESSION_WITHINGS_TOKEN]
+    withings_client = withings.WithingsClient(
+        consumer_key       = WITHINGS_KEY,
+        consumer_secret    = WITHINGS_SECRET,
+        oauth_token        = request_token[0],
+        oauth_token_secret = request_token[1])
+    access_token       = withings_client.get_access_token(
+        oauth_verifier = request.args['oauth_verifier'])
+    withings_auth   = {
+        'oauth_token':        access_token['oauth_token'],
+        'oauth_token_secret': access_token['oauth_token_secret']
+    }
+    g.user.withings_auth   = util.serialize(withings_auth)
+    g.user.withings_userid = access_token['userid']
+    g.user.save()
+    return redirect(url_for('device_settings'))
+</code></pre>
+
+<p>Whenever I want to use the Withings API for a user, I fetch their authentication information, create a <code>WithingsClient</code>, and fire off requests to the API. For example, I use this <code>parse_withings()</code> URL handler to respond to notifications from their API.
+</p>
+
+<pre><code class="python">@app.route('/hook/parse-withings')
+def parse_withings():
+    user_id         = request.form.get('userid')
+    user            = models.User.all().filter('withings_userid =', user_id).get()
+    withings_auth   = util.deserialize(user.withings_auth)
+    withings_client = withings.WithingsClient(
+        consumer_key       = WITHINGS_KEY,
+        consumer_secret    = WITHINGS_SECRET,
+        oauth_token        = withings_auth['oauth_token'],
+        oauth_token_secret = withings_auth['oauth_token_secret'],
+        userid             = user.withings_userid)
+    measurement_groups = withings_client.get_measurements(
+        startdate=request.form.get('startdate'),
+        enddate=request.form.get('enddate'))
+    imports.import_withings(user, measurement_groups)
+    return Response(status=200)
+</code></pre>
+
+<p>Now that I have the OAuth flow setup for Withings, I can easily support other APIs &mdash; whatever my users need most. &#x263A;
+</p>
