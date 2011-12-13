@@ -21,8 +21,7 @@ Fortunately, I found out that jQuery templates have actually been deprecated in 
  <h3 id="syntax">Syntax Changes</h3>
 </div>
 
-<p>The operators are now prefixed with a "#". You can pretty much do a search and replace to port them over - <code>{{if}}</code> to <code>{{#if}}</code>,
-<code>{{else}}</code> to <code>{{#else}}</code>, and <code>{{each}}</code> to <code>{{#each}}</code>.
+<p>The operators are now prefixed with a "#". You can pretty much do a search and replace to port them over - <code>{{if}}</code> to <code>{{#if}}</code>, <code>{{each}}</code> to <code>{{#each}}</code>.
 </p>
 
 <p>Previously, variables were outputted with <code>${var}</code> - now, variables are outputted using the same double brackets as operators, like so: <code>{{=var}}</code> and <code>{{=var.property}}</code>. If you're using a server-side templating engine that also uses that bracket notation for templating, you will need to instruct the engine to ignore the jsRender templates. For Jinja2 templates, that means surrounding the script tags with <code>{&#37; raw &#37;}{&#37; endraw &#37;}</code>.
@@ -69,7 +68,7 @@ Finally, if you want to access the value of the currently referenced variable, t
 
 <p>Using jsRender templates:</p>
 <pre><code class="javascript">var template = $.template('stream-comment-tmpl', document.getElementById('stream-comment-tmpl').innerHTML);
-var html = $.render(templateData, templateId);
+var html = $.render(templateData, template);
 </code></pre>
 <pre><code class="html">&lt;script id=&quot;stream-comment-tmpl&quot; type=&quot;text/jsrender-tmpl&quot;&gt;
   &lt;span&gt;{{=label}}&lt;/span&gt;
@@ -80,7 +79,7 @@ var html = $.render(templateData, templateId);
       &lt;span class=&quot;icon-highfive&quot;&gt;&lt;/span&gt;
       High five from &lt;a href=&quot;{{=creator.profileUrl}}&quot;&gt;{{=creator.fullName}}&lt;/a&gt;!
      &lt;/div&gt;
-    {{#else}}
+    {{else}}
      &lt;a href=&quot;{{=creator.profileUrl}}&quot;&gt;{{=creator.fullName}}&quot;&lt;/a&gt;:
      &lt;div&gt;{{=textHtml!}}&lt;/div&gt;
     {{/if}}
@@ -120,9 +119,9 @@ The reasoning behind the change is discussed more in <a href="https://github.com
 <pre><code class="html">&lt;script id=&quot;notes-mini-tmpl&quot; type=&quot;text/jsrender-tmpl&quot;&gt;
 &lt;div&gt;
   {{#each dates}}
-    {{#if $notes}}
+    {{#if notes}}
      {{=notes}}  
-    {{#else}}
+    {{else}}
      No notes for this date.
     {{/if}}
   {{/each}}
