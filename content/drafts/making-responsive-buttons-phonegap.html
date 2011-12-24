@@ -1,0 +1,33 @@
+---
+title: Making Responsive Buttons in PhoneGap
+created: !!timestamp '2011-12-13 10:00:00'
+tags:
+    - phonegap
+    - performance
+    - javascript
+    - android
+---
+
+<p>
+After improving my loading performance significantly, thanks to adding timing points in my code and removing several bottlenecks,
+I set out to tackle run-time performance &mdash; starting with making my buttons more responsive.
+</p>
+<p>
+When a user clicks a button, both in the real world and in an app, they expect it to respond in two ways: 1) the button initiates some action and 2) the button looks like it's been clicked (usually depressed in some way). In my webapp, I accomplish this by 1) assigning a click handler to the button that fires off some callback and 2) assigning an ".active" state to our button that applies a different set of style rules. In the mobile version of my webapp, however, I suffered from slow-to-respond buttons when I used that strategy. Why?
+</p>
+<p>
+In a mobile browser, my app does receive click events on DOM elements, but the browser fires them a significant amount of time after a user interaction - long enough to notice a lag. So instead, I changed my app to listen the "touchstart" and "touchend" events, which are fired immediately when a user interacts with an element, and also listen to "touchmove" to make sure the user isn't trying to swipe or drag something. I should have theoretically beeen able to define an ":active" pseudo-class to get activated when the user touches or clicks the elements, but unfortunately the Android browser does not currently assign that class - so instead, I add on an additional "active" class in my touch listeners, and make a single rule for ".active,:active" for my buttons.
+</p>
+
+<p>
+In making this change, I looked around for various "touch" JS wrappers, as I knew there were some idiosyncrasies to handling touch events. Some libraries turn the touch events into a range of interactions - like Zepto with swipe, longTap, doubleTap - and bla. Other libraries like XXX try to create a common interface for touch and click events, so that you can use either/or for both the mobile and desktop version of your app. I originally started with Zepto, but after running into a strange issue of my app becoming completely unresponsive to touch every few hours, I decided to just modify the code from <a>this article</a>. Since I re-use my code between the mobile and web, I wrap my click handling and triggering into utility functions and only use touch events when they're available on the device. 
+</p>
+<p>Here's a gist with the relevant functionality:</p>
+
+<p>
+After changing from click to touch, I found a few issues with my app responding so quickly - for example, when I show a DIV in response to a touch event and that DIV contains form input/text elements, any input under the user's finger will get focused and go into edit mode. To avoid that issue, I now put my form elements into readonly mode until a bit of time after they're shown. I also found that mixing click events and touch events in the same interface had unpredictable results, and that happened when I had 3rd party web-optimized plugins assigning click handlers. To remedy that, I went into the plugin code and made them use my click wrapper function. Neither of those are the most elegant solutions, but, well, they seem to work so far. 
+</p>
+
+<p>
+I definitely recommend using touch events, but be prepared: there are a lot of ways to do them and they may affect your app in unpredictable ways. Spend a few days using your touch-enabled app before you let it loose on your touch-y users. :)
+</p>

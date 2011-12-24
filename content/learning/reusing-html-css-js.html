@@ -1,0 +1,65 @@
+---
+title: Reusing HTML/CSS/JS across Web & Mobile
+created: !!timestamp '2011-12-23 10:00:00'
+tags:
+    - phonegap
+    - android
+---
+
+<p>At this point, there's only one of me working on <a href="http://www.everyday.io">everyday.io</a>. That's awesome because
+it means I get to learn everything about what it means to make a user-facing website,
+but it also means that I need to be careful about where I spend my time, since it is
+such a precious resource.
+</p>
+<p>When I started it, everyday.io was a web-only service, but I soon realized
+that when it comes to tracking your daily habits, users really want to be able to track on the go,
+from their mobile device. I realized I needed a real strategy for
+how I could offer it as a website, mobile-optimized website, and as multi-platform mobile app while keeping them all up-to-date
+and still having time to iterate on the core functionality. 
+So I decided to find a way to reuse as much of my code across those offerings as possible. Here's how I do it:
+</p>
+
+<h3>Basic setup</h3>
+<ul>
+ <li><b>Web App:</b> <a href="http://flask.pocoo.org/">Flask microframework</a>, <a href="http://code.google.com/appengine/docs/python/overview.html">Python App Engine</a>. Designed for desktop web, but displays in mobile web browsers.
+ <li><b>Mobile App:</b> <a href="http://phonegap.com/">PhoneGap</a>, distributed on Android and iOS platforms.
+</ul>
+
+<h3>Datastore</h3>
+<p>When a user logins in, I store their authentication in a session cookie. From then on, either my web app or mobile app can make XMLHttpRequests to fetch or save information for the user. In the mobile app, the calls are made over SSL (and in case you're wondering, the cross-domain restrictions aren't applied to files in Phonegap apps so that is not an issue).
+</p>
+
+
+<h3>HTML</h3>
+<p>The Flask microframework comes bundled with support for Jinja2 templates (like Django templates but better) so that's what I use for server-side templating in my web app. 
+I mostly use the templates for includes/inheritance and not for variable rendering, as then I can keep my logic in JavaScript, making it easier to re-use that 
+logic in the mobile app. For example, <a href="https://gist.github.com/1515751">log.html</a> extends from a base HTML and includes Jinja2 templates for the log sections. 
+</p>
+<p>I wanted to reuse much of the same HTML in my mobile app, so I use the Jinja2 template engine for it as well. My mobile app is actually <a href="https://gist.github.com/1515763">one single HTML page</a>, where each "page" is a <code>DIV</code> with a <code>.mobile-page</code> class, and many of the "pages" include Jinja2 templates (the same ones that are used by the web app). After I make changes to the base HTML or templates, I test them in a browser (using a <a href="https://chrome.google.com/webstore/detail/idhfcdbheobinplaamokffboaccidbal">Chrome extension</a> to mimic a small screen), and then when I want to output them to a device, I render the templates using <a href="https://gist.github.com/1515758">a script</a> and copy them to the Android/iOS app folders. 
+</p>
+
+<h3>CSS</h3>
+<p>I start off with <a href="http://twitter.github.com/bootstrap/">Twitter Bootstrap</a> for my CSS, because it makes for a slick but easy-to-customize foundation. I then use <a href="http://sass-lang.com/">SASS</a> for writing my own CSS rules, as I can write cleaner cross-browser CSS that way and can also do things like includes. I define my shared styles and variables in <code>common.scss</code>, and include that in <code>web.scss</code> (for the web app) and <code>phonegap.scss</code> (for the mobile app). I use CSS media queries in both <code>common.scss</code> and <code>web.scss</code> to define rules for smaller screens &emdash; some of those rules apply also to the mobile app, but some just to the web app.
+</p>
+
+<h3>JS</h3>
+<p>As I mentioned in <a href="/learning/javascript-modularization.html">an earlier post</a>, I recently refactored my JavaScript to make it easier to share logic across the web and mobile app. I now have a <code>shared.js</code> for shared functionality, a <code>web.js</code> for web-specific functionality, and <code>phonegap.js</code> for mobile-specific functionality (makes sense, doesn't it? :). Since I also use different JS libraries across the web and mobile app versions, I use different rules in my Makefile to generate the final compressed JavaScript for the web and mobile apps.
+</p>
+
+<h3>Summary</h3>
+<p>Here's a Venn diagram that summarizes what's different and what's shared:</p>
+<p><img src="/media/images/webmobilevenn.png">
+</p>
+
+<p>And here are screenshots comparing the log on the web versus in the mobile app:
+<p>
+<p>
+<img src="/media/images/web_log.png">
+</p>
+<p>
+<img src="/media/images/iphone_log.png">
+</p>
+
+<p>I suspect that my HTML/CSS/JS for the mobile app version will diverge more as I try to make the app conform more to the expectations of mobile users (and iPhone users in particular), but I still like the idea of reusing as much of my code as I can. The less time I spend writing redundant code, the more time I can spend adding features and improving the <a href="http://www.everyday.io">everyday.io</a> service for all my users.
+</p>
+

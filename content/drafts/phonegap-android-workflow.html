@@ -1,0 +1,36 @@
+---
+title: Setting up a PhoneGap -> Android Workflow
+created: !!timestamp '2011-11-19 10:00:00'
+tags:
+    - phonegap
+    - android
+---
+
+<p>Mobile development takes more time than web development, because of the additional
+
+Since mobile development involves more 
+
+When I'm developing the website for everyday.io, I can just spin up the website in my browser, make a change, and reload.
+When I'm developing the mobile Android app, I actually have to compile the APK and upload it to my device to test if my changes work.
+It's a slower process (and I don't have time for slow processes!), so I've done what I can to optimize the workflow.
+
+1) Test in browser
+
+My Phonegap code starts off as a view in my website, which means I can just enter "http://test.everyday.io/mobile" and see
+how my code works. 
+
+Chrome resolutione extension
+
+2) Compile JS/CSS & Template, Copy, & Cache-Bust
+
+3) Compile APK & Install
+
+4) Update version numbers & release
+
+I serve my Phonegap code off a URL handler in my website, so that I can actually test it in the browser.
+
+http://www.alittlemadness.com/2010/05/31/setting-up-an-android-project-build/
+http://developer.android.com/guide/developing/debugging/ddms.html
+http://developer.android.com/guide/developing/building/building-cmdline.html
+
+https://gist.github.com/1512771
